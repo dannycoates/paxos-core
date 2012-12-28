@@ -1,0 +1,21 @@
+{
+  "name": "paxos-core",
+  "version": "0.0.1",
+  "description": "Paxos protocol core actors",
+  "main": "index.js",
+  "scripts": {
+    "test": "node_modules/mocha/bin/mocha -R spec"
+  },
+  "dependencies": {
+
+  },
+  "devDependencies": {
+    "mocha": "*"
+  },
+  "repository": "",
+  "keywords": [
+    "paxos"
+  ],
+  "author": "Danny Coates",
+  "license": "MIT"
+}
