@@ -1,10 +1,10 @@
 module.exports = function (inherits, EventEmitter) {
 
-	function Learner(majority) {
+	function Learner(majority, highmark) {
 		EventEmitter.call(this)
 		this.majority = majority
 		this.instanceProposals = {}
-		this.instanceFacts = {}
+		this._highmark = highmark || 0
 	}
 	inherits(Learner, EventEmitter)
 
@@ -20,8 +20,8 @@ module.exports = function (inherits, EventEmitter) {
 		return function (other) { return proposal.acceptor === other.acceptor }
 	}
 
-	Learner.prototype.decide = function (proposal) {
-		if (this.instanceFacts[proposal.instance]) {
+	Learner.prototype.accepted = function (proposal) {
+		if (this._highmark >= proposal.instance) {
 			return
 		}
 		var proposals = this.instanceProposals[proposal.instance] || []
@@ -31,12 +31,16 @@ module.exports = function (inherits, EventEmitter) {
 		if (proposals.length >= this.majority) {
 			var fact = chooseProposal(proposals)
 			this.emit('fact', fact)
-			this.instanceFacts[fact.instance] = fact
 			delete this.instanceProposals[proposal.instance]
 		}
 		else {
 			this.instanceProposals[proposal.instance] = proposals
 		}
+	}
+
+	Learner.prototype.highmark = function (instance) {
+		this._highmark = instance || this._highmark
+		return this._highmark
 	}
 
 	return Learner

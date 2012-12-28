@@ -1,11 +1,11 @@
-module.exports = function (inherits, Stream) {
+module.exports = function (inherits, Stream, Learner) {
 
 	// TODO: a way to "query" acceptors for gap instances?
-	function LearnerStream(learner, startingInstance) {
+	function LearnerStream(majority, startingInstance) {
 		Stream.call(this)
 		this.readable = true
 		this.state = new StreamingState(startingInstance || 0)
-		this.learner = learner
+		this.learner = new Learner(majority, startingInstance)
 		this.onFact = onFact.bind(this)
 		this.learner.on('fact', this.onFact)
 	}
@@ -23,6 +23,7 @@ module.exports = function (inherits, Stream) {
 		}
 		if (this.previousInstance + 1 === fact.instance) {
 			this.previousInstance = fact.instance
+			stream.learner.highmark(this.previousInstance)
 			stream.emit('data', fact)
 			return this
 		}
@@ -36,7 +37,7 @@ module.exports = function (inherits, Stream) {
 		this.newestFact = newestFact
 	}
 
-	function factSort(a, b) {
+	function compareInstance(a, b) {
 		return a.instance - b.instance
 	}
 
@@ -63,7 +64,8 @@ module.exports = function (inherits, Stream) {
 		}
 
 		if(this.gap.length === this.gapLength) {
-			this.gap.sort(factSort)
+			stream.learner.highmark(this.newestFact.instance)
+			this.gap.sort(compareInstance)
 			for (var i = 0; i < this.gapLength; i++) {
 				stream.emit('data', this.gap[i])
 			}

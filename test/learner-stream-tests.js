@@ -2,9 +2,9 @@ var assert = require('assert')
 var inherits = require('util').inherits
 var Stream = require('stream')
 var EventEmitter = require('events').EventEmitter
-var LearnerStream = require('../lib/learner-stream')(inherits, Stream)
+var Learner = require('../learner/learner')(inherits, EventEmitter)
+var LearnerStream = require('../learner/learner-stream')(inherits, Stream, Learner)
 var Proposal = require('../lib/proposal')()
-var FakeLearner = EventEmitter
 
 function makeFacts(count, start) {
 	var facts = []
@@ -23,11 +23,12 @@ describe('LearnerStream', function () {
 
 	describe('on(data)' , function () {
 
-		var learner = new FakeLearner()
+		var learner = null
 		var ls = null
 
 		beforeEach(function () {
-			ls = new LearnerStream(learner)
+			ls = new LearnerStream(2)
+			learner = ls.learner
 		})
 
 		afterEach(function () {
