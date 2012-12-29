@@ -1,9 +1,6 @@
 var assert = require('assert')
-var inherits = require('util').inherits
-var Stream = require('stream')
-var EventEmitter = require('events').EventEmitter
-var Learner = require('../learner/learner')(inherits, EventEmitter)
-var LearnerStream = require('../learner/learner-stream')(inherits, Stream, Learner)
+
+var LearnerStream = require('../learner')
 var Proposal = require('../lib/proposal')()
 
 function makeFacts(count, start) {
