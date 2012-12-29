@@ -6,14 +6,8 @@ module.exports = function (inherits, EventEmitter) {
 		assert(id < 100, "max id is 99")
 		EventEmitter.call(this)
 		this.id = id
-		this.ballotCounter = 0
 	}
 	inherits(Proposer, EventEmitter)
-
-	Proposer.prototype.nextBallot = function () {
-		this.ballotCounter++
-		return (this.ballotCounter * 100) + this.id
-	}
 
 	Proposer.prototype.prepare = function (instance) {
 
