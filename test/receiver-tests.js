@@ -17,20 +17,20 @@ describe('Receiver', function () {
 		it('keeps new proposals before there is a majority', function () {
 			var proposal = new Proposal(4, 3, 'x', 2, 1)
 			receiver.accepted(proposal)
-			assert.equal(proposal, receiver.instanceProposals[4][0])
+			assert.equal(proposal, receiver.instances[4][0])
 		})
 
 		it('only keeps one proposal for a given acceptor', function () {
 			var proposal = new Proposal(4, 3, 'x', 2, 1)
 			receiver.accepted(proposal)
 			receiver.accepted(proposal)
-			assert.equal(receiver.instanceProposals[4].length, 1)
+			assert.equal(receiver.instances[4].length, 1)
 		})
 
 		it('emits a fact when a majority is reached', function (done) {
 			var proposal0 = new Proposal(4, 3, 'x', 2, 1)
 			var proposal1 = new Proposal(4, 3, 'x', 2, 0)
-			receiver.on('fact', done.bind(null, null))
+			receiver.on('learned', done.bind(null, null))
 			receiver.accepted(proposal0)
 			receiver.accepted(proposal1)
 		})
@@ -40,13 +40,13 @@ describe('Receiver', function () {
 			var proposal1 = new Proposal(4, 3, 'x', 2, 0)
 			receiver.accepted(proposal0)
 			receiver.accepted(proposal1)
-			assert.equal(receiver.instanceProposals[1], undefined)
+			assert.equal(receiver.instances[1], undefined)
 		})
 
 		it('emits the proposal with the largest ballot', function (done) {
 			var proposal0 = new Proposal(4, 3, 'x', 2, 1)
 			var proposal1 = new Proposal(4, 5, 'x', 2, 0)
-			receiver.on('fact', function (fact) {
+			receiver.on('learned', function (fact) {
 				assert.equal(fact, proposal1)
 				done()
 			})
@@ -59,7 +59,7 @@ describe('Receiver', function () {
 
 			var proposal2 = new Proposal(4, 3, 'x', 2, 1)
 			receiver.accepted(proposal2)
-			assert.equal(receiver.instanceProposals[4], undefined)
+			assert.equal(receiver.instances[4], undefined)
 		})
 
 	})

@@ -46,7 +46,7 @@ describe('Learner', function () {
 					}
 				})
 				while (facts.length) {
-					receiver.emit('fact', facts.shift())
+					receiver.emit('learned', facts.shift())
 				}
 			}
 		)
@@ -63,7 +63,7 @@ describe('Learner', function () {
 					}
 				})
 				while (facts.length) {
-					receiver.emit('fact', facts.shift())
+					receiver.emit('learned', facts.shift())
 				}
 			}
 		)
@@ -84,7 +84,7 @@ describe('Learner', function () {
 					}
 				})
 				while (facts.length) {
-					receiver.emit('fact', facts.shift())
+					receiver.emit('learned', facts.shift())
 				}
 			}
 		)
@@ -105,7 +105,7 @@ describe('Learner', function () {
 					}
 				})
 				while (facts.length) {
-					receiver.emit('fact', facts.shift())
+					receiver.emit('learned', facts.shift())
 				}
 			}
 		)

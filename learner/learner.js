@@ -6,13 +6,12 @@ module.exports = function (inherits, Stream, Receiver, StreamState) {
 		this.readable = true
 		this.state = new StreamState(startingInstance || 0)
 		this.receiver = new Receiver(majority, startingInstance)
-		this.onFact = onFact.bind(this)
-		this.receiver.on('fact', this.onFact)
+		this.receiver.on('learned', onLearned.bind(this))
 	}
 	inherits(Learner, Stream)
 
-	function onFact(fact) {
-		this.emit('fact', fact)
+	function onLearned(fact) {
+		this.emit('learned', fact)
 		this.state = this.state.add(this, fact)
 	}
 

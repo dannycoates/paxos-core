@@ -3,7 +3,7 @@ module.exports = function (inherits, EventEmitter) {
 	function Receiver(majority, highmark) {
 		EventEmitter.call(this)
 		this.majority = majority
-		this.instanceProposals = {}
+		this.instances = {}
 		this._highmark = highmark || 0
 	}
 	inherits(Receiver, EventEmitter)
@@ -24,17 +24,16 @@ module.exports = function (inherits, EventEmitter) {
 		if (this._highmark >= proposal.instance) {
 			return
 		}
-		var proposals = this.instanceProposals[proposal.instance] || []
+		var proposals = this.instances[proposal.instance] || []
 		if (!proposals.some(sameAcceptor(proposal))) {
 			proposals.push(proposal)
 		}
 		if (proposals.length >= this.majority) {
-			var fact = chooseProposal(proposals)
-			this.emit('fact', fact)
-			delete this.instanceProposals[proposal.instance]
+			this.emit('learned', chooseProposal(proposals))
+			delete this.instances[proposal.instance]
 		}
 		else {
-			this.instanceProposals[proposal.instance] = proposals
+			this.instances[proposal.instance] = proposals
 		}
 	}
 

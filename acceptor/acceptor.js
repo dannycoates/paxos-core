@@ -4,7 +4,7 @@ module.exports = function (assert, inherits, EventEmitter) {
 		EventEmitter.call(this)
 		this.id = id
 		this.learner = learner || nilLearner
-		this.learner.on('data', learn.bind(this))
+		this.learner.on('data', onlearnerData.bind(this))
 		this.storage = storage || nilStorage
 		this.highmark = this.learner.highmark()
 		this.instances = {}
@@ -13,11 +13,13 @@ module.exports = function (assert, inherits, EventEmitter) {
 
 	Acceptor.prototype.prepare = function (prepare) {
 		assert.equal(prepare.valueBallot, undefined)
-		var state = this.instances[prepare.instance] || prepare
 
 		if (prepare.instance <= this.highmark) {
-			return this.lookup(prepare.instance, 'promise')
+			return this.lookup(prepare.instance, 'promised')
 		}
+
+		var state = this.instances[prepare.instance] || prepare
+
 		if (state.ballot <= prepare.ballot && !state.valueBallot) {
 			// Promise to reject lower ballots, but
 			// if a proposal has already been accepted don't touch it
@@ -25,7 +27,7 @@ module.exports = function (assert, inherits, EventEmitter) {
 		}
 		state.acceptor = this.id
 		this.instances[prepare.instance] = state
-		this.storage.set(state, this.emit.bind(this, 'promise'))
+		this.storage.set(state, this.emit.bind(this, 'promised'))
 	}
 
 	Acceptor.prototype.accept = function (proposal) {
@@ -36,7 +38,8 @@ module.exports = function (assert, inherits, EventEmitter) {
 		}
 		if (state.ballot > proposal.ballot) {
 			// refuse the proposal by replying with the higher ballot proposal
-			return this.emit('accepted', state)
+			return this.emit('refused', state)
+			// TODO: should/could the learner know about this?
 		}
 		proposal.acceptor = this.id
 		this.instances[proposal.instance] = proposal
@@ -47,7 +50,7 @@ module.exports = function (assert, inherits, EventEmitter) {
 		this.storage.get(instance, this.emit.bind(this, event || 'lookup'))
 	}
 
-	function learn(proposal) {
+	function onlearnerData(proposal) {
 		this.highmark = proposal.instance
 		delete this.instances[proposal.instance]
 	}

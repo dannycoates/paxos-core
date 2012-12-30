@@ -34,7 +34,7 @@ describe('Acceptor', function () {
 			function (done) {
 				var proposal1 = new Proposal(4, 3, 'x', 2, 1)
 				acceptor.accept(proposal1)
-				acceptor.once('promise', function (proposal) {
+				acceptor.once('promised', function (proposal) {
 					assert.equal(proposal, proposal1)
 					done()
 				})
@@ -52,7 +52,7 @@ describe('Acceptor', function () {
 				var proposal2 = new Proposal(4, 3, 'x', 2, 1)
 
 				acceptor.accept(proposal1)
-				acceptor.once('accepted', function (proposal) {
+				acceptor.once('refused', function (proposal) {
 					assert.equal(proposal, proposal1)
 					done()
 				})
@@ -83,11 +83,11 @@ describe('Acceptor', function () {
 			}
 		)
 
-		it('rejects a proposal if a prepare request had a higher ballot',
+		it('refuses a proposal if a prepare request had a higher ballot',
 			function (done) {
 				var prep1 = new Prepare(4, 5)
 				var proposal1 = new Proposal(4, 3, 'x', 2, 1)
-				acceptor.once('accepted', function (proposal) {
+				acceptor.once('refused', function (proposal) {
 					assert.equal(proposal, prep1)
 					done()
 				})
