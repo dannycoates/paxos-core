@@ -11,8 +11,7 @@ module.exports = function () {
 		}
 		if (this.previousInstance + 1 === fact.instance) {
 			this.previousInstance = fact.instance
-			stream.learner.highmark(this.previousInstance)
-			stream.emit('data', fact)
+			stream.emitProposal(fact)
 			return this
 		}
 		return new BufferingState(this.previousInstance, fact)
@@ -52,12 +51,11 @@ module.exports = function () {
 		}
 
 		if(this.gap.length === this.gapLength) {
-			stream.learner.highmark(this.newestFact.instance)
 			this.gap.sort(compareInstance)
 			for (var i = 0; i < this.gapLength; i++) {
-				stream.emit('data', this.gap[i])
+				stream.emitProposal(this.gap[i])
 			}
-			stream.emit('data', this.newestFact)
+			stream.emitProposal(this.newestFact)
 			return new StreamingState(this.newestFact.instance)
 		}
 

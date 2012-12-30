@@ -3,7 +3,7 @@ var inherits = require('util').inherits
 var EventEmitter = require('events').EventEmitter
 var Proposal = require('../lib/proposal')()
 var Prepare = require('../lib/prepare')()
-var Acceptor = require('../acceptor/acceptor')(inherits, EventEmitter)
+var Acceptor = require('../acceptor/acceptor')(assert, inherits, EventEmitter)
 
 describe('Acceptor', function () {
 
@@ -34,23 +34,12 @@ describe('Acceptor', function () {
 			function (done) {
 				var proposal1 = new Proposal(4, 3, 'x', 2, 1)
 				acceptor.accept(proposal1)
-				acceptor.once('prepared', function (proposal) {
+				acceptor.once('promise', function (proposal) {
 					assert.equal(proposal, proposal1)
 					done()
 				})
 
 				acceptor.prepare(new Prepare(4, 5))
-			}
-		)
-
-		it('updates the accepted proposal ballot if the prepare ballot is larger',
-			function () {
-				var proposal = new Proposal(4, 3, 'x', 2, 1)
-				acceptor.accept(proposal)
-
-				var prep = new Prepare(4, 5)
-				acceptor.prepare(prep)
-				assert.equal(proposal.ballot, prep.ballot)
 			}
 		)
 	})

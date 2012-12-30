@@ -1,66 +1,113 @@
 var assert = require('assert')
-var inherits = require('util').inherits
-var EventEmitter = require('events').EventEmitter
-var Learner = require('../learner/learner')(inherits, EventEmitter)
+
+var Learner = require('../learner')
 var Proposal = require('../lib/proposal')()
+
+function makeFacts(count, start) {
+	var facts = []
+	var start = start || 1
+	for (var i = start; i < start + count; i++) {
+		facts.push(new Proposal(i, 999))
+	}
+	return facts
+}
+
+function randomSort(a, b) {
+	return Math.random() - 0.5
+}
 
 describe('Learner', function () {
 
-	describe('accepted' , function () {
+	describe('on(data)' , function () {
 
-		var learner = null
+		var receiver = null
+		var ls = null
 
 		beforeEach(function () {
-			learner = new Learner(2)
+			ls = new Learner(2)
+			receiver = ls.receiver
 		})
 
-		it('keeps new proposals before there is a majority', function () {
-			var proposal = new Proposal(4, 3, 'x', 2, 1)
-			learner.accepted(proposal)
-			assert.equal(proposal, learner.instanceProposals[4][0])
+		afterEach(function () {
+			receiver.removeAllListeners('fact')
+			ls.removeAllListeners('data')
 		})
 
-		it('only keeps one proposal for a given acceptor', function () {
-			var proposal = new Proposal(4, 3, 'x', 2, 1)
-			learner.accepted(proposal)
-			learner.accepted(proposal)
-			assert.equal(learner.instanceProposals[4].length, 1)
-		})
+		it('emits data events immediately when receiver emits sequentially',
+			function (done) {
+				var count = 10
+				var i = 1
+				var facts = makeFacts(count)
+				ls.on('data', function (fact) {
+					assert.equal(facts.length, count - i)
+					assert.equal(fact.instance, i++)
+					if (i > count) {
+						done()
+					}
+				})
+				while (facts.length) {
+					receiver.emit('fact', facts.shift())
+				}
+			}
+		)
 
-		it('emits a fact when a majority is reached', function (done) {
-			var proposal0 = new Proposal(4, 3, 'x', 2, 1)
-			var proposal1 = new Proposal(4, 3, 'x', 2, 0)
-			learner.on('fact', done.bind(null, null))
-			learner.accepted(proposal0)
-			learner.accepted(proposal1)
-		})
+		it('emits data in instance order when receiver emits out of order',
+			function (done) {
+				var count = 100
+				var i = 1
+				var facts = makeFacts(count).sort(randomSort)
+				ls.on('data', function (fact) {
+					assert.equal(fact.instance, i++)
+					if (i > count) {
+						done()
+					}
+				})
+				while (facts.length) {
+					receiver.emit('fact', facts.shift())
+				}
+			}
+		)
 
-		it('deletes the instanceProposals when a fact is chosen', function () {
-			var proposal0 = new Proposal(4, 3, 'x', 2, 1)
-			var proposal1 = new Proposal(4, 3, 'x', 2, 0)
-			learner.accepted(proposal0)
-			learner.accepted(proposal1)
-			assert.equal(learner.instanceProposals[1], undefined)
-		})
+		it('emits data in instance order when receiver emits in order and out',
+			function (done) {
+				var count = 100
+				var i = 1
+				var facts = makeFacts(20)
+					.concat(makeFacts(10, 21).sort(randomSort))
+					.concat(makeFacts(50, 31))
+					.concat(makeFacts(10, 81).sort(randomSort))
+					.concat(makeFacts(10, 91))
+				ls.on('data', function (fact) {
+					assert.equal(fact.instance, i++)
+					if (i > count) {
+						done()
+					}
+				})
+				while (facts.length) {
+					receiver.emit('fact', facts.shift())
+				}
+			}
+		)
 
-		it('emits the proposal with the largest ballot', function (done) {
-			var proposal0 = new Proposal(4, 3, 'x', 2, 1)
-			var proposal1 = new Proposal(4, 5, 'x', 2, 0)
-			learner.on('fact', function (fact) {
-				assert.equal(fact, proposal1)
-				done()
-			})
-			learner.accepted(proposal0)
-			learner.accepted(proposal1)
-		})
-
-		it('skips proposals for previously chosen instances', function () {
-			learner.highmark(4)
-
-			var proposal2 = new Proposal(4, 3, 'x', 2, 1)
-			learner.accepted(proposal2)
-			assert.equal(learner.instanceProposals[4], undefined)
-		})
-
+		it('ignores facts it has already handled',
+			function (done) {
+				var count = 100
+				var i = 1
+				var facts = makeFacts(10)
+					.concat(makeFacts(10).sort(randomSort))
+					.concat(makeFacts(40, 11).sort(randomSort))
+					.concat(makeFacts(40, 11).sort(randomSort))
+					.concat(makeFacts(50, 51))
+				ls.on('data', function (fact) {
+					assert.equal(fact.instance, i++)
+					if (i > count) {
+						done()
+					}
+				})
+				while (facts.length) {
+					receiver.emit('fact', facts.shift())
+				}
+			}
+		)
 	})
 })

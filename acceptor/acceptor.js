@@ -1,4 +1,4 @@
-module.exports = function (inherits, EventEmitter) {
+module.exports = function (assert, inherits, EventEmitter) {
 
 	function Acceptor(id, learner, storage) {
 		EventEmitter.call(this)
@@ -12,31 +12,30 @@ module.exports = function (inherits, EventEmitter) {
 	inherits(Acceptor, EventEmitter)
 
 	Acceptor.prototype.prepare = function (prepare) {
+		assert.equal(prepare.valueBallot, undefined)
 		var state = this.instances[prepare.instance] || prepare
 
 		if (prepare.instance <= this.highmark) {
-			return this.lookup(prepare.instance, 'prepared')
+			return this.lookup(prepare.instance, 'promise')
 		}
-		if (state.ballot <= prepare.ballot) {
-			if (state.valueBallot) {
-				// we've already accepted a proposal for this instance
-				state.ballot = prepare.ballot
-			}
-			else {
-				state = prepare
-			}
+		if (state.ballot <= prepare.ballot && !state.valueBallot) {
+			// Promise to reject lower ballots, but
+			// if a proposal has already been accepted don't touch it
+			state = prepare
 		}
+		state.acceptor = this.id
 		this.instances[prepare.instance] = state
-		this.storage.set(state, this.emit.bind(this, 'prepared'))
+		this.storage.set(state, this.emit.bind(this, 'promise'))
 	}
 
 	Acceptor.prototype.accept = function (proposal) {
 		var state = this.instances[proposal.instance] || proposal
 
 		if (proposal.instance <= this.highmark) {
-			return this.lookup(prepare.instance, 'accepted')
+			return this.lookup(proposal.instance, 'accepted')
 		}
 		if (state.ballot > proposal.ballot) {
+			// refuse the proposal by replying with the higher ballot proposal
 			return this.emit('accepted', state)
 		}
 		proposal.acceptor = this.id

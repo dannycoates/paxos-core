@@ -1,46 +1,34 @@
-module.exports = function (inherits, EventEmitter) {
+module.exports = function (inherits, Stream, Receiver, StreamState) {
 
-	function Learner(majority, highmark) {
-		EventEmitter.call(this)
-		this.majority = majority
-		this.instanceProposals = {}
-		this._highmark = highmark || 0
+	// TODO: a way to "query" acceptors for gap instances?
+	function Learner(majority, startingInstance) {
+		Stream.call(this)
+		this.readable = true
+		this.state = new StreamState(startingInstance || 0)
+		this.receiver = new Receiver(majority, startingInstance)
+		this.onFact = onFact.bind(this)
+		this.receiver.on('fact', this.onFact)
 	}
-	inherits(Learner, EventEmitter)
+	inherits(Learner, Stream)
 
-	function maxBallot(previous, current) {
-		return current.ballot > previous.ballot ? current : previous
+	function onFact(fact) {
+		this.emit('fact', fact)
+		this.state = this.state.add(this, fact)
 	}
 
-	function chooseProposal(proposals) {
-		return proposals.reduce(maxBallot)
-	}
-
-	function sameAcceptor(proposal) {
-		return function (other) { return proposal.acceptor === other.acceptor }
+	Learner.prototype.emitProposal = function (proposal) {
+		this.receiver.highmark(proposal.instance)
+		this.emit('data', proposal)
 	}
 
 	Learner.prototype.accepted = function (proposal) {
-		if (this._highmark >= proposal.instance) {
-			return
-		}
-		var proposals = this.instanceProposals[proposal.instance] || []
-		if (!proposals.some(sameAcceptor(proposal))) {
-			proposals.push(proposal)
-		}
-		if (proposals.length >= this.majority) {
-			var fact = chooseProposal(proposals)
-			this.emit('fact', fact)
-			delete this.instanceProposals[proposal.instance]
-		}
-		else {
-			this.instanceProposals[proposal.instance] = proposals
-		}
+		this.receiver.accepted(proposal)
 	}
 
-	Learner.prototype.highmark = function (instance) {
-		this._highmark = instance || this._highmark
-		return this._highmark
+	Learner.prototype.write = Learner.prototype.accepted
+
+	Learner.prototype.highmark = function () {
+		return this.receiver.highmark()
 	}
 
 	return Learner

@@ -3,7 +3,7 @@ var Stream = require('stream')
 var inherits = require('util').inherits
 
 var StreamState = require('./stream-state')()
-var Learner = require('./learner')(inherits, EventEmitter)
-var LearnerStream = require('./learner-stream')(inherits, Stream, Learner, StreamState)
+var Receiver = require('./receiver')(inherits, EventEmitter)
+var Learner = require('./learner')(inherits, Stream, Receiver, StreamState)
 
-module.exports = LearnerStream
+module.exports = Learner
