@@ -45,8 +45,8 @@ module.exports = function (assert, inherits, EventEmitter, Paxos) {
 		if (instance) {
 			instance.complete(this)
 		}
-		this.emit('learned', proposal)
 		delete this.instances[proposal.instance]
+		this.emit('learned', proposal)
 	}
 
 	function onPrepare(prepare) {

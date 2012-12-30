@@ -29,8 +29,8 @@ module.exports = function (inherits, EventEmitter) {
 			proposals.push(proposal)
 		}
 		if (proposals.length >= this.majority) {
-			this.emit('learned', chooseProposal(proposals))
 			delete this.instances[proposal.instance]
+			this.emit('learned', chooseProposal(proposals))
 		}
 		else {
 			this.instances[proposal.instance] = proposals
