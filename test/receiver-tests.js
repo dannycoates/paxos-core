@@ -1,7 +1,8 @@
 var assert = require('assert')
 var inherits = require('util').inherits
 var EventEmitter = require('events').EventEmitter
-var Receiver = require('../learner/receiver')(inherits, EventEmitter)
+var LearnState = require('../learner/learn-state')()
+var Receiver = require('../learner/receiver')(inherits, EventEmitter, LearnState)
 var Proposal = require('../lib/proposal')()
 
 describe('Receiver', function () {
@@ -17,41 +18,46 @@ describe('Receiver', function () {
 		it('keeps new proposals before there is a majority', function () {
 			var proposal = new Proposal(4, 3, 'x', 2, 1)
 			receiver.accepted(proposal)
-			assert.equal(proposal, receiver.instances[4][0])
+			assert.equal(proposal, receiver.instances[4].proposals[0])
 		})
 
 		it('only keeps one proposal for a given acceptor', function () {
 			var proposal = new Proposal(4, 3, 'x', 2, 1)
 			receiver.accepted(proposal)
 			receiver.accepted(proposal)
-			assert.equal(receiver.instances[4].length, 1)
+			assert.equal(receiver.instances[4].proposals.length, 1)
 		})
 
 		it('emits a fact when a majority is reached', function (done) {
-			var proposal0 = new Proposal(4, 3, 'x', 2, 1)
-			var proposal1 = new Proposal(4, 3, 'x', 2, 0)
+			var proposal0 = new Proposal(4, 3, 'x', 2, 0)
+			var proposal1 = new Proposal(4, 3, 'x', 2, 1)
 			receiver.on('learned', done.bind(null, null))
 			receiver.accepted(proposal0)
 			receiver.accepted(proposal1)
 		})
 
-		it('deletes the instanceProposals when a fact is chosen', function () {
-			var proposal0 = new Proposal(4, 3, 'x', 2, 1)
-			var proposal1 = new Proposal(4, 3, 'x', 2, 0)
+		it('deletes the instance when a fact is chosen', function () {
+			var proposal0 = new Proposal(4, 3, 'x', 2, 0)
+			var proposal1 = new Proposal(4, 3, 'x', 2, 1)
 			receiver.accepted(proposal0)
 			receiver.accepted(proposal1)
 			assert.equal(receiver.instances[1], undefined)
 		})
 
-		it('emits the proposal with the largest ballot', function (done) {
-			var proposal0 = new Proposal(4, 3, 'x', 2, 1)
-			var proposal1 = new Proposal(4, 5, 'x', 2, 0)
+		it('requires the winning ballot to have a majority of votes', function (done) {
+			var proposal0 = new Proposal(4, 3, 'y', 3, 0)
+			var proposal1 = new Proposal(4, 5, 'x', 5, 1)
+			var proposal2 = new Proposal(4, 5, 'x', 5, 2)
+			var learned = false
 			receiver.on('learned', function (fact) {
-				assert.equal(fact, proposal1)
+				assert.equal(fact.ballot, proposal2.ballot)
+				learned = true
 				done()
 			})
 			receiver.accepted(proposal0)
 			receiver.accepted(proposal1)
+			assert(!learned)
+			receiver.accepted(proposal2)
 		})
 
 		it('skips proposals for previously chosen instances', function () {

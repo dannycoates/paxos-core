@@ -1,4 +1,4 @@
-module.exports = function (inherits, EventEmitter) {
+module.exports = function (inherits, EventEmitter, LearnState) {
 
 	function Receiver(majority, highmark) {
 		EventEmitter.call(this)
@@ -8,32 +8,19 @@ module.exports = function (inherits, EventEmitter) {
 	}
 	inherits(Receiver, EventEmitter)
 
-	function maxBallot(previous, current) {
-		return current.ballot > previous.ballot ? current : previous
-	}
-
-	function chooseProposal(proposals) {
-		return proposals.reduce(maxBallot)
-	}
-
-	function sameAcceptor(proposal) {
-		return function (other) { return proposal.acceptor === other.acceptor }
-	}
-
 	Receiver.prototype.accepted = function (proposal) {
 		if (this._highmark >= proposal.instance) {
 			return
 		}
-		var proposals = this.instances[proposal.instance] || []
-		if (!proposals.some(sameAcceptor(proposal))) {
-			proposals.push(proposal)
-		}
-		if (proposals.length >= this.majority) {
+		var state = this.instances[proposal.instance] || new LearnState(this.majority)
+
+		var learned = state.accepted(proposal)
+		if (learned) {
 			delete this.instances[proposal.instance]
-			this.emit('learned', chooseProposal(proposals))
+			this.emit('learned', learned)
 		}
 		else {
-			this.instances[proposal.instance] = proposals
+			this.instances[proposal.instance] = state
 		}
 	}
 

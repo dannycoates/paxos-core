@@ -12,12 +12,14 @@ module.exports = function (inherits, Stream, Receiver, StreamState) {
 
 	function onLearned(fact) {
 		this.emit('learned', fact)
-		this.state = this.state.add(this, fact)
-	}
-
-	Learner.prototype.emitProposal = function (proposal) {
-		this.receiver.highmark(proposal.instance)
-		this.emit('data', proposal)
+		var facts = this.state.add(fact)
+		var highestInstance;
+		for (var i = 0; i < facts.length; i++) {
+			var fact = facts[i]
+			highestInstance = fact.instance
+			this.emit('data', fact)
+		}
+		this.receiver.highmark(highestInstance)
 	}
 
 	Learner.prototype.accepted = function (proposal) {

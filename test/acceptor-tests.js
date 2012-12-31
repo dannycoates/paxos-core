@@ -52,7 +52,7 @@ describe('Acceptor', function () {
 				var proposal2 = new Proposal(4, 3, 'x', 2, 1)
 
 				acceptor.accept(proposal1)
-				acceptor.once('refused', function (proposal) {
+				acceptor.once('rejected', function (proposal) {
 					assert.equal(proposal, proposal1)
 					done()
 				})
@@ -87,7 +87,7 @@ describe('Acceptor', function () {
 			function (done) {
 				var prep1 = new Prepare(4, 5)
 				var proposal1 = new Proposal(4, 3, 'x', 2, 1)
-				acceptor.once('refused', function (proposal) {
+				acceptor.once('rejected', function (proposal) {
 					assert.equal(proposal, prep1)
 					done()
 				})

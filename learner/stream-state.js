@@ -1,24 +1,38 @@
 module.exports = function () {
 
-	function StreamingState(previousInstance) {
-		this.previousInstance = previousInstance
+	function StreamState(startingInstance) {
+		this.state = new Streaming(startingInstance || 0)
 	}
 
-	StreamingState.prototype.add = function (stream, fact) {
+	StreamState.prototype.add = function (fact) {
+		var facts = this.state.add(fact)
+		this.state = this.state.next
+		return facts
+	}
+
+	function Streaming(previousInstance) {
+		this.previousInstance = previousInstance
+		this.next = this
+	}
+
+	var empty = []
+
+	Streaming.prototype.add = function (fact) {
 		if (this.previousInstance >= fact.instance) {
 			// ignore repeat facts
-			return this
+			return empty
 		}
 		if (this.previousInstance + 1 === fact.instance) {
 			this.previousInstance = fact.instance
-			stream.emitProposal(fact)
-			return this
+			return [fact]
 		}
-		return new BufferingState(this.previousInstance, fact)
+		this.next = new Buffering(this.previousInstance, fact)
+		return empty
 	}
 
-	function BufferingState(previousInstance, newestFact) {
+	function Buffering(previousInstance, newestFact) {
 		this.previousInstance = previousInstance
+		this.next = this
 		this.gapLength = newestFact.instance - (previousInstance + 1)
 		this.gap = []
 		this.newestFact = newestFact
@@ -32,14 +46,14 @@ module.exports = function () {
 		return function (other) { return other.instance === fact.instance }
 	}
 
-	BufferingState.prototype.add = function (stream, fact) {
+	Buffering.prototype.add = function (fact) {
 		if (
 				fact.instance <= this.previousInstance ||
 				fact.instance === this.newestFact.instance ||
 				this.gap.some(sameInstance(fact))
 		) {
 			// ignore repeat facts
-			return this
+			return empty
 		}
 		else if (fact.instance < this.newestFact.instance) {
 			this.gap.push(fact)
@@ -51,18 +65,13 @@ module.exports = function () {
 		}
 
 		if(this.gap.length === this.gapLength) {
+			this.gap.push(this.newestFact)
 			this.gap.sort(compareInstance)
-			for (var i = 0; i < this.gapLength; i++) {
-				stream.emitProposal(this.gap[i])
-			}
-			stream.emitProposal(this.newestFact)
-			return new StreamingState(this.newestFact.instance)
+			this.next = new Streaming(this.newestFact.instance)
+			return this.gap
 		}
-
-		return this
+		return empty
 	}
 
-	// only StreamingState needs to be public
-	// because it is always the initial state
-	return StreamingState
+	return StreamState
 }

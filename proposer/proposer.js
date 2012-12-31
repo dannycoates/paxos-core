@@ -33,7 +33,7 @@ module.exports = function (assert, inherits, EventEmitter, Paxos) {
 		this.onAccept(proposal)
 	}
 
-	Proposer.prototype.refused = function (proposal) {
+	Proposer.prototype.rejected = function (proposal) {
 		var instance = this.instances[proposal.instance]
 		if (instance) {
 			instance.prepare()

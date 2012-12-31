@@ -38,8 +38,7 @@ module.exports = function (assert, inherits, EventEmitter) {
 		}
 		if (state.ballot > proposal.ballot) {
 			// refuse the proposal by replying with the higher ballot proposal
-			return this.emit('refused', state)
-			// TODO: should/could the learner know about this?
+			return this.emit('rejected', state)
 		}
 		proposal.acceptor = this.id
 		this.instances[proposal.instance] = proposal
@@ -52,6 +51,7 @@ module.exports = function (assert, inherits, EventEmitter) {
 
 	function onlearnerData(proposal) {
 		this.highmark = proposal.instance
+		this.storage.set(proposal, this.emit.bind(this, 'stored'))
 		delete this.instances[proposal.instance]
 	}
 

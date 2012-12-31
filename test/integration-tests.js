@@ -45,7 +45,7 @@ proposer.on(
 acceptors.forEach(
 	function (a) {
 		a.on('promised', proposer.promised.bind(proposer))
-		a.on('refused', proposer.refused.bind(proposer))
+		a.on('rejected', proposer.rejected.bind(proposer))
 		a.on('accepted', learner.accepted.bind(learner))
 	}
 )
@@ -77,4 +77,3 @@ describe("the whole f'ing thing", function () {
 		}
 	})
 })
-
