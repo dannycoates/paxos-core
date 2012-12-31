@@ -1,4 +1,4 @@
-module.exports = function (assert, inherits, EventEmitter, Paxos) {
+module.exports = function (assert, inherits, EventEmitter, ProposeState) {
 
 	function Proposer(id, majority, learner) {
 		assert(id < 100, "max id is 99")
@@ -15,18 +15,19 @@ module.exports = function (assert, inherits, EventEmitter, Paxos) {
 	}
 	inherits(Proposer, EventEmitter)
 
-	Proposer.prototype.prepare = function (instanceId) {
-		instanceId = instanceId || this.instanceCounter++
-		var instance = this.instances[instanceId] || Paxos.create(this, instanceId)
+	Proposer.prototype.instance = function (instanceId, ballot) {
+		var instance = this.instances[instanceId] ||
+			ProposeState.create(this, instanceId, ballot)
 		this.instances[instanceId] = instance
-		instance.prepare()
+		return instance
+	}
+
+	Proposer.prototype.prepare = function (instanceId) {
+		this.instance(instanceId || this.instanceCounter++).prepare()
 	}
 
 	Proposer.prototype.promised = function (proposal) {
-		var instance = this.instances[proposal.instance] ||
-			Paxos.create(this, proposal.instance, proposal.ballot)
-		this.instances[proposal.instance] = instance
-		instance.promised(proposal)
+		this.instance(proposal.instance, proposal.ballot).promised(proposal)
 	}
 
 	Proposer.prototype.accept = function (proposal) {
