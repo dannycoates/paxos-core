@@ -1,9 +1,7 @@
 var assert = require('assert')
-var inherits = require('util').inherits
-var EventEmitter = require('events').EventEmitter
-var Proposal = require('../lib/proposal')()
 var Prepare = require('../lib/prepare')()
-var Acceptor = require('../acceptor/acceptor')(assert, inherits, EventEmitter, Proposal)
+var Proposal = require('../lib/proposal')()
+var Acceptor = require('../acceptor')
 
 describe('Acceptor', function () {
 

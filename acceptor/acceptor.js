@@ -1,4 +1,4 @@
-module.exports = function (assert, inherits, EventEmitter, Proposal) {
+module.exports = function (assert, inherits, EventEmitter, AcceptState) {
 
 	function Acceptor(id, learner, storage) {
 		EventEmitter.call(this)
@@ -12,7 +12,7 @@ module.exports = function (assert, inherits, EventEmitter, Proposal) {
 	inherits(Acceptor, EventEmitter)
 
 	Acceptor.prototype.instance = function (id) {
-		var instance = this.instances[id] || Proposal.create(id, this.id)
+		var instance = this.instances[id] || new AcceptState(id, this.id)
 		this.instances[id] = instance
 		return instance
 	}
