@@ -6,7 +6,6 @@ module.exports = function (assert, inherits, EventEmitter, Prepare, Proposal) {
 		this.instance = instance
 		this.ballot = ballot || 0
 		this.value = null
-		this.valueBallot = 0
 
 		// TODO: decide where timeouts go. At this point there's arguments for
 		// here, where they become part of the state, or in the communication
@@ -41,9 +40,12 @@ module.exports = function (assert, inherits, EventEmitter, Prepare, Proposal) {
 	}
 
 	ProposeState.prototype.proposal = function () {
-		var proposal = new Proposal(this.instance, this.ballot, this.value, this.valueBallot)
-		var event = this.value ? 'accept' : 'propose'
-		this.emit(event, proposal)
+		var proposal = new Proposal(
+			this.instance,
+			this.ballot,
+			this.value
+		)
+		this.emit(this.value ? 'accept' : 'propose', proposal)
 	}
 
 	function sameAcceptor(proposal) {
@@ -58,14 +60,13 @@ module.exports = function (assert, inherits, EventEmitter, Prepare, Proposal) {
 		assert.equal(this.instance, proposal.instance)
 
 		if (this.ballot < proposal.ballot) {
-			// prepare failed, retry with a higher ballot
-			return this.prepare(proposal.ballot)
+			return this.prepare(proposal.ballot) // retry with a higher ballot
 		}
 
-		if (!this.promises.some(sameAcceptor(proposal))) {
-			this.promises.push(proposal)
-		}
-		if (this.promises.length === this.majority) {
+		if (
+			!this.promises.some(sameAcceptor(proposal))
+			&& this.promises.push(proposal) === this.majority
+		) {
 			var highest = this.promises.reduce(highestValueBallot)
 			if (highest.valueBallot) {
 				this.value = highest.value

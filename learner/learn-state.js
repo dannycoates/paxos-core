@@ -8,16 +8,13 @@ module.exports = function () {
 
 	function sameBallotDifferentAcceptor(proposal) {
 		return function (other) {
-			return proposal.acceptor !== other.acceptor &&
-				proposal.ballot === other.ballot
+			return proposal.acceptor !== other.acceptor
+				&& proposal.ballot === other.ballot
 		}
 	}
 
 	LearnState.prototype.accepted = function (proposal) {
-
-		if (proposal.ballot < this.newestBallot) {
-			return
-		}
+		if (proposal.ballot < this.newestBallot) { return }
 
 		this.newestBallot = proposal.ballot
 		this.proposals = this.proposals.filter(sameBallotDifferentAcceptor(proposal))

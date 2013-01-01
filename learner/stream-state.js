@@ -48,9 +48,9 @@ module.exports = function () {
 
 	Buffering.prototype.add = function (fact) {
 		if (
-				fact.instance <= this.previousInstance ||
-				fact.instance === this.newestFact.instance ||
-				this.gap.some(sameInstance(fact))
+				fact.instance <= this.previousInstance
+				|| fact.instance === this.newestFact.instance
+				|| this.gap.some(sameInstance(fact))
 		) {
 			// ignore repeat facts
 			return empty

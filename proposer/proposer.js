@@ -16,8 +16,8 @@ module.exports = function (assert, inherits, EventEmitter, ProposeState) {
 	inherits(Proposer, EventEmitter)
 
 	Proposer.prototype.instance = function (instanceId, ballot) {
-		var instance = this.instances[instanceId] ||
-			ProposeState.create(this, instanceId, ballot)
+		var instance = this.instances[instanceId]
+			|| ProposeState.create(this, instanceId, ballot)
 		this.instances[instanceId] = instance
 		return instance
 	}
