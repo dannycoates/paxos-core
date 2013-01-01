@@ -44,13 +44,13 @@ describe('Receiver', function () {
 			assert.equal(receiver.instances[1], undefined)
 		})
 
-		it('requires the winning ballot to have a majority of votes', function (done) {
+		it('requires the winning round to have a majority of votes', function (done) {
 			var proposal0 = new Proposal(4, 3, 'y', 3, 0)
 			var proposal1 = new Proposal(4, 5, 'x', 5, 1)
 			var proposal2 = new Proposal(4, 5, 'x', 5, 2)
 			var learned = false
 			receiver.on('learned', function (fact) {
-				assert.equal(fact.ballot, proposal2.ballot)
+				assert.equal(fact.round, proposal2.round)
 				learned = true
 				done()
 			})

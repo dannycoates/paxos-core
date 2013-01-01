@@ -12,9 +12,9 @@ module.exports = function (assert, inherits, EventEmitter, ProposeState) {
 	}
 	inherits(Proposer, EventEmitter)
 
-	Proposer.prototype.instance = function (instanceId, ballot) {
+	Proposer.prototype.instance = function (instanceId, round) {
 		var instance = this.instances[instanceId]
-			|| new ProposeState(this, instanceId, ballot)
+			|| new ProposeState(this, instanceId, round)
 		this.instances[instanceId] = instance
 		return instance
 	}
@@ -27,7 +27,7 @@ module.exports = function (assert, inherits, EventEmitter, ProposeState) {
 	}
 
 	Proposer.prototype.promised = function (proposal) {
-		var instance = this.instance(proposal.instance, proposal.ballot)
+		var instance = this.instance(proposal.instance, proposal.round)
 		var prepareOrProposal = instance.promised(proposal)
 		this.emit(instance.action, prepareOrProposal)
 	}

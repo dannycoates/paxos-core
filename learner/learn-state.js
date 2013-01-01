@@ -3,21 +3,21 @@ module.exports = function () {
 	function LearnState(majority) {
 		this.proposals = []
 		this.majority = majority
-		this.newestBallot = 0
+		this.newestRound = 0
 	}
 
-	function sameBallotDifferentAcceptor(proposal) {
+	function sameRoundDifferentAcceptor(proposal) {
 		return function (other) {
 			return proposal.acceptor !== other.acceptor
-				&& proposal.ballot === other.ballot
+				&& proposal.round === other.round
 		}
 	}
 
 	LearnState.prototype.accepted = function (proposal) {
-		if (proposal.ballot < this.newestBallot) { return }
+		if (proposal.round < this.newestRound) { return }
 
-		this.newestBallot = proposal.ballot
-		this.proposals = this.proposals.filter(sameBallotDifferentAcceptor(proposal))
+		this.newestRound = proposal.round
+		this.proposals = this.proposals.filter(sameRoundDifferentAcceptor(proposal))
 		this.proposals.push(proposal)
 
 		if (this.proposals.length === this.majority) {

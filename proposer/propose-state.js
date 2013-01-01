@@ -1,9 +1,9 @@
 module.exports = function (assert, Prepare, Proposal) {
 
-	function ProposeState(proposer, instance, ballot) {
+	function ProposeState(proposer, instance, round) {
 		this.proposerId = proposer.id
 		this.instance = instance
-		this.ballot = ballot || 0
+		this.round = round || 0
 		this.value = null
 
 		// TODO: decide where timeouts go. At this point there's arguments for
@@ -17,25 +17,25 @@ module.exports = function (assert, Prepare, Proposal) {
 		this.majority = proposer.majority
 	}
 
-	ProposeState.prototype.nextBallot = function (previous) {
+	ProposeState.prototype.nextRound = function (previous) {
 		var id = previous % 100
 		var counter = (previous - id) + 100 //here's the increment
-		this.ballot = counter + this.proposerId
+		this.round = counter + this.proposerId
 		this.promises = []
-		return this.ballot
+		return this.round
 	}
 
-	ProposeState.prototype.prepare = function (previousBallot) {
-		this.nextBallot(previousBallot || this.ballot)
+	ProposeState.prototype.prepare = function (previousRound) {
+		this.nextRound(previousRound || this.round)
 		this.action = 'prepare'
-		return new Prepare(this.instance, this.ballot)
+		return new Prepare(this.instance, this.round)
 	}
 
 	ProposeState.prototype.proposal = function () {
 		this.action = this.value ? 'accept' : 'propose'
 		return new Proposal(
 			this.instance,
-			this.ballot,
+			this.round,
 			this.value
 		)
 	}
@@ -44,23 +44,23 @@ module.exports = function (assert, Prepare, Proposal) {
 		return function (other) { return proposal.acceptor === other.acceptor }
 	}
 
-	function highestValueBallot(a, b) {
-		return (a.valueBallot || 0) > (b.valueBallot || 0) ? a : b
+	function highestValueRound(a, b) {
+		return (a.valueRound || 0) > (b.valueRound || 0) ? a : b
 	}
 
 	ProposeState.prototype.promised = function (proposal) {
 		assert.equal(this.instance, proposal.instance)
 
-		if (this.ballot < proposal.ballot) {
-			return this.prepare(proposal.ballot) // retry with a higher ballot
+		if (this.round < proposal.round) {
+			return this.prepare(proposal.round) // retry with a higher round
 		}
 
 		if (
 			!this.promises.some(sameAcceptor(proposal))
 			&& this.promises.push(proposal) === this.majority
 		) {
-			var highest = this.promises.reduce(highestValueBallot)
-			if (highest.valueBallot) {
+			var highest = this.promises.reduce(highestValueRound)
+			if (highest.valueRound) {
 				this.value = highest.value
 				// otherwise there were no accepted proposals
 			}

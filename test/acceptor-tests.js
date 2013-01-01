@@ -14,18 +14,18 @@ describe('Acceptor', function () {
 
 	describe('prepare()', function () {
 
-		it('stores the highest ballot',
+		it('stores the highest round',
 			function () {
 				var prep1 = new Prepare(1, 1)
 				var prep2 = new Prepare(1, 2)
 				var prep3 = new Prepare(1, 3)
 
 				acceptor.prepare(prep2)
-				assert.equal(acceptor.instance(1).ballot, prep2.ballot)
+				assert.equal(acceptor.instance(1).round, prep2.round)
 				acceptor.prepare(prep1)
-				assert.equal(acceptor.instance(1).ballot, prep2.ballot)
+				assert.equal(acceptor.instance(1).round, prep2.round)
 				acceptor.prepare(prep3)
-				assert.equal(acceptor.instance(1).ballot, prep3.ballot)
+				assert.equal(acceptor.instance(1).round, prep3.round)
 			}
 		)
 
@@ -45,14 +45,14 @@ describe('Acceptor', function () {
 
 	describe('accept()', function () {
 
-		it('does not accept a proposal with a lower ballot',
+		it('does not accept a proposal with a lower round',
 			function (done) {
 				var proposal1 = new Proposal(4, 5, 'x')
 				var proposal2 = new Proposal(4, 3, 'x')
 
 				acceptor.accept(proposal1)
 				acceptor.once('rejected', function (proposal) {
-					assert.equal(proposal.ballot, proposal1.ballot)
+					assert.equal(proposal.round, proposal1.round)
 					done()
 				})
 				acceptor.accept(proposal2)
@@ -62,7 +62,7 @@ describe('Acceptor', function () {
 		it('emits the accepted proposal',
 			function (done) {
 				acceptor.once('accepted', function (proposal) {
-					assert.equal(proposal.ballot, proposal1.ballot)
+					assert.equal(proposal.round, proposal1.round)
 					done()
 				})
 
@@ -75,19 +75,19 @@ describe('Acceptor', function () {
 			function (done) {
 				var proposal1 = new Proposal(4, 3, 'x')
 				acceptor.once('accepted', function (proposal) {
-					assert.equal(proposal.ballot, proposal1.ballot)
+					assert.equal(proposal.round, proposal1.round)
 					done()
 				})
 				acceptor.accept(proposal1)
 			}
 		)
 
-		it('refuses a proposal if a prepare request had a higher ballot',
+		it('refuses a proposal if a prepare request had a higher round',
 			function (done) {
 				var prep1 = new Prepare(4, 5)
 				var proposal1 = new Proposal(4, 3, 'x')
 				acceptor.once('rejected', function (proposal) {
-					assert.equal(proposal.ballot, prep1.ballot)
+					assert.equal(proposal.round, prep1.round)
 					done()
 				})
 				acceptor.prepare(prep1)
