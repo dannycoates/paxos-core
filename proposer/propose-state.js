@@ -1,7 +1,6 @@
-module.exports = function (assert, inherits, EventEmitter, Prepare, Proposal) {
+module.exports = function (assert, Prepare, Proposal) {
 
 	function ProposeState(proposer, instance, ballot) {
-		EventEmitter.call(this)
 		this.proposerId = proposer.id
 		this.instance = instance
 		this.ballot = ballot || 0
@@ -14,16 +13,8 @@ module.exports = function (assert, inherits, EventEmitter, Prepare, Proposal) {
 		// here. So lets try to do it "there" and only come back if its too ugly.
 
 		this.promises = []
+		this.action = 'none'
 		this.majority = proposer.majority
-	}
-	inherits(ProposeState, EventEmitter)
-
-	ProposeState.create = function (proposer, instance, ballot) {
-		var state = new ProposeState(proposer, instance, ballot)
-		state.on('prepare', proposer.onPrepare)
-		state.on('accept', proposer.onAccept)
-		state.on('propose', proposer.onPropose)
-		return state
 	}
 
 	ProposeState.prototype.nextBallot = function (previous) {
@@ -36,16 +27,17 @@ module.exports = function (assert, inherits, EventEmitter, Prepare, Proposal) {
 
 	ProposeState.prototype.prepare = function (previousBallot) {
 		this.nextBallot(previousBallot || this.ballot)
-		this.emit('prepare', new Prepare(this.instance, this.ballot))
+		this.action = 'prepare'
+		return new Prepare(this.instance, this.ballot)
 	}
 
 	ProposeState.prototype.proposal = function () {
-		var proposal = new Proposal(
+		this.action = this.value ? 'accept' : 'propose'
+		return new Proposal(
 			this.instance,
 			this.ballot,
 			this.value
 		)
-		this.emit(this.value ? 'accept' : 'propose', proposal)
 	}
 
 	function sameAcceptor(proposal) {
@@ -74,12 +66,7 @@ module.exports = function (assert, inherits, EventEmitter, Prepare, Proposal) {
 			}
 			return this.proposal()
 		}
-	}
-
-	ProposeState.prototype.complete = function (proposer) {
-		this.removeListener('prepare', proposer.onPrepare)
-		this.removeListener('accept', proposer.onAccept)
-		this.removeListener('propose', proposer.onPropose)
+		this.action = 'none'
 	}
 
 	return ProposeState
