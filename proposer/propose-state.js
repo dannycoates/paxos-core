@@ -71,7 +71,6 @@ module.exports = function (assert, inherits, EventEmitter, Prepare, Proposal) {
 				this.value = highest.value
 				// otherwise there were no accepted proposals
 			}
-			this.valueBallot = this.ballot
 			return this.proposal()
 		}
 	}
