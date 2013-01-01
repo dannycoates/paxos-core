@@ -9,6 +9,9 @@ module.exports = function (assert, inherits, EventEmitter, ProposeState) {
 		this.instances = {}
 		this.learner = learner
 		this.learner.on('learned', onLearned.bind(this))
+
+		this.onPromised = this.promised.bind(this)
+		this.onRejected = this.rejected.bind(this)
 	}
 	inherits(Proposer, EventEmitter)
 
@@ -38,7 +41,7 @@ module.exports = function (assert, inherits, EventEmitter, ProposeState) {
 
 	Proposer.prototype.rejected = function (proposal) {
 		var instance = this.instances[proposal.instance]
-		if (instance) {
+		if (instance && instance.round < proposal.round) {
 			this.prepare()
 		}
 	}

@@ -1,15 +1,28 @@
-module.exports = function (assert, inherits, EventEmitter, AcceptState) {
+module.exports = function (assert, inherits, EventEmitter, AcceptState, NoStorage) {
 
 	function Acceptor(id, learner, storage) {
 		EventEmitter.call(this)
 		this.id = id
-		this.learner = learner
+		this.learner = learner //TODO learner can probably be move "up" a level
 		this.learner.on('data', onlearnerData.bind(this))
-		this.storage = storage || nilStorage
+		this.storage = storage || new NoStorage()
 		this.highmark = this.learner.highmark()
 		this.instances = {}
+
+		this.onPrepare = this.prepare.bind(this)
+		this.onAccept = this.accept.bind(this)
+
+		this._registerStorageEvents()
 	}
 	inherits(Acceptor, EventEmitter)
+
+	Acceptor.prototype._registerStorageEvents = function () {
+		var events = ['promised', 'rejected', 'accepted', 'stored', 'lookup']
+		for (var i = 0; i < events.length; i++) {
+			var event = events[i]
+			this.storage.on(event, this.emit.bind(this, event))
+		}
+	}
 
 	Acceptor.prototype.instance = function (id) {
 		var instance = this.instances[id] || new AcceptState(id, this.id)
@@ -23,7 +36,7 @@ module.exports = function (assert, inherits, EventEmitter, AcceptState) {
 		}
 
 		var proposal = this.instance(prepare.instance).prepare(prepare)
-		this.storage.set(proposal, this.emit.bind(this, 'promised'))
+		this.storage.set(proposal, 'promised')
 	}
 
 	Acceptor.prototype.accept = function (proposal) {
@@ -34,22 +47,20 @@ module.exports = function (assert, inherits, EventEmitter, AcceptState) {
 		var instance = this.instance(proposal.instance)
 		var accepted = instance.accept(proposal)
 		if (accepted) {
-			return this.storage.set(accepted, this.emit.bind(this, 'accepted'))
+			return this.storage.set(accepted, 'accepted')
 		}
-		this.emit('rejected', instance)
+		this.emit('rejected', instance.proposal())
 	}
 
 	Acceptor.prototype.lookup = function (instanceId, event) {
-		this.storage.get(instanceId, this.emit.bind(this, event || 'lookup'))
+		this.storage.get(instanceId, event || 'lookup')
 	}
 
 	function onlearnerData(proposal) {
 		this.highmark = proposal.instance
-		this.storage.set(proposal, this.emit.bind(this, 'stored'))
+		this.storage.set(proposal)
 		delete this.instances[proposal.instance]
 	}
-
-	var nilStorage = { get: function (i) { }, set: function (p, cb) { cb(p) }}
 
 	return Acceptor
 }

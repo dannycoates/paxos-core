@@ -7,6 +7,8 @@ module.exports = function (inherits, Stream, Receiver, StreamState) {
 		this.state = new StreamState(startingInstance || 0)
 		this.receiver = new Receiver(majority, startingInstance)
 		this.receiver.on('learned', onLearned.bind(this))
+
+		this.onAccepted = this.accepted.bind(this)
 	}
 	inherits(Learner, Stream)
 
