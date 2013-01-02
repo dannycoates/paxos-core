@@ -29,6 +29,8 @@ module.exports = function (inherits, EventEmitter, Learner, Acceptor, Proposer) 
 		this.proposer.on('prepare', this.onProposerPrepare)
 		this.proposer.on('propose', this.onProposerPropose)
 		this.proposer.on('accept', this.onProposerAccept)
+
+		this.learner.on('learned', this.emit.bind(this, 'learned'))
 	}
 	inherits(Paxos, EventEmitter)
 
