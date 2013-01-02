@@ -1,13 +1,7 @@
 var assert = require('assert')
+var Paxos = require('../index')
 
-var Proposer = require('../proposer')
-var Acceptor = require('../acceptor')
-var Learner = require('../learner')
-
-var NoServer = require('../lib/no-server')()
-var Paxos = require('../paxos')(Learner, Acceptor, Proposer)
-
-var paxos = new Paxos(new NoServer(), null, 1, 1)
+var paxos = new Paxos(1, 1)
 
 var values = []
 var count = 10

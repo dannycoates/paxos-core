@@ -1,12 +1,18 @@
-module.exports = function (Learner, Acceptor, Proposer) {
+module.exports = function (inherits, EventEmitter, Learner, Acceptor, Proposer) {
 
-	function Paxos(server, storage, id, majority, startingInstance) {
+	function Paxos(id, majority, storage, startingInstance) {
+		EventEmitter.call(this)
 		this.values = []
 		this.prepared = []
-		this.server = server
 		this.learner = new Learner(majority, startingInstance || 0)
 		this.acceptor = new Acceptor(id, this.learner, storage)
 		this.proposer = new Proposer(id, majority, this.learner)
+
+		this.prepare = this.acceptor.onPrepare
+		this.accept = this.acceptor.onAccept
+		this.promised = this.proposer.onPromised
+		this.rejected = this.proposer.onRejected
+		this.accepted = this.learner.onAccepted
 
 		this.onAcceptorPromised = onAcceptorPromised.bind(this)
 		this.onAcceptorRejected = onAcceptorRejected.bind(this)
@@ -16,12 +22,6 @@ module.exports = function (Learner, Acceptor, Proposer) {
 		this.onProposerPropose = onProposerPropose.bind(this)
 		this.onProposerAccept = onProposerAccept.bind(this)
 
-		this.server.on('prepare', this.acceptor.onPrepare)
-		this.server.on('accept', this.acceptor.onAccept)
-		this.server.on('promised', this.proposer.onPromised)
-		this.server.on('rejected', this.proposer.onRejected)
-		this.server.on('accepted', this.learner.onAccepted)
-
 		this.acceptor.on('promised', this.onAcceptorPromised)
 		this.acceptor.on('rejected', this.onAcceptorRejected)
 		this.acceptor.on('accepted', this.onAcceptorAccepted)
@@ -30,6 +30,7 @@ module.exports = function (Learner, Acceptor, Proposer) {
 		this.proposer.on('propose', this.onProposerPropose)
 		this.proposer.on('accept', this.onProposerAccept)
 	}
+	inherits(Paxos, EventEmitter)
 
 	Paxos.prototype.submit = function (value) {
 		if (this.prepared.length > 0) {
@@ -44,22 +45,22 @@ module.exports = function (Learner, Acceptor, Proposer) {
 
 	function onAcceptorPromised(proposal) {
 		this.proposer.promised(proposal)
-		this.server.promised(proposal)
+		this.emit('promised', proposal)
 	}
 
 	function onAcceptorRejected(proposal) {
 		this.proposer.rejected(proposal)
-		this.server.rejected(proposal)
+		this.emit('rejected', proposal)
 	}
 
 	function onAcceptorAccepted(proposal) {
 		this.learner.accepted(proposal)
-		this.server.accepted(proposal)
+		this.emit('accepted', proposal)
 	}
 
 	function onProposerPrepare(prepare) {
 		this.acceptor.prepare(prepare)
-		this.server.prepare(prepare)
+		this.emit('prepare', prepare)
 	}
 
 	function onProposerPropose(proposal) {
@@ -74,7 +75,7 @@ module.exports = function (Learner, Acceptor, Proposer) {
 
 	function onProposerAccept(proposal) {
 		this.acceptor.accept(proposal)
-		this.server.accept(proposal)
+		this.emit('accept', proposal)
 	}
 
 	return Paxos
