@@ -16,16 +16,9 @@ module.exports = function () {
 	}
 
 	LearnState.prototype.accepted = function (proposal) {
-		if (proposal.round < this.round) {
+		if (proposal.precedes(this.proposer, this.round)) {
 			return
 		}
-		else if (
-			proposal.proposer !== this.proposer
-			&& proposal.round === this.round
-		) {
-			return
-		}
-
 		this.proposer = proposal.proposer
 		this.round = proposal.round
 		this.proposals = this.proposals.filter(sameRoundDifferentAcceptor(proposal))

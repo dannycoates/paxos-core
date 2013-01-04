@@ -21,13 +21,7 @@ module.exports = function (Proposal) {
 	}
 
 	AcceptState.prototype.accept = function (proposal) {
-		if (proposal.round < this.round) {
-			return
-		}
-		else if (
-			proposal.proposer !== this.proposer
-			&& proposal.round === this.round
-		) {
+		if (proposal.precedes(this.proposer, this.round)) {
 			return
 		}
 		this.proposer = proposal.proposer
