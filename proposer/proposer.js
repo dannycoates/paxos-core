@@ -1,7 +1,6 @@
 module.exports = function (assert, inherits, EventEmitter, ProposeState) {
 
 	function Proposer(id, majority, learner) {
-		assert(id < 100, "max id is 99")
 		EventEmitter.call(this)
 		this.id = id
 		this.majority = majority
@@ -15,17 +14,17 @@ module.exports = function (assert, inherits, EventEmitter, ProposeState) {
 	}
 	inherits(Proposer, EventEmitter)
 
-	Proposer.prototype.instance = function (instanceId, round) {
-		var instance = this.instances[instanceId]
-			|| new ProposeState(this, instanceId, round)
-		this.instances[instanceId] = instance
+	Proposer.prototype.instance = function (id, round) {
+		var instance = this.instances[id]
+			|| new ProposeState(this, id, round)
+		this.instances[id] = instance
 		return instance
 	}
 
-	Proposer.prototype.prepare = function (instanceId) {
+	Proposer.prototype.prepare = function (instance) {
 		this.emit(
 			'prepare',
-			this.instance(instanceId || this.instanceCounter++).prepare()
+			this.instance(instance || this.instanceCounter++).prepare()
 		)
 	}
 

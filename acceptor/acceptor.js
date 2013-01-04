@@ -52,8 +52,8 @@ module.exports = function (assert, inherits, EventEmitter, AcceptState, NoStorag
 		this.emit('rejected', instance.proposal())
 	}
 
-	Acceptor.prototype.lookup = function (instanceId, event) {
-		this.storage.get(instanceId, event || 'lookup')
+	Acceptor.prototype.lookup = function (instance, event) {
+		this.storage.get(instance, event || 'lookup')
 	}
 
 	function onlearnerData(proposal) {

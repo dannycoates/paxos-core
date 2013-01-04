@@ -1,7 +1,7 @@
 module.exports = function (assert, Prepare, Proposal) {
 
 	function ProposeState(proposer, instance, round) {
-		this.proposerId = proposer.id
+		this.proposer = proposer.id
 		this.instance = instance
 		this.round = round || 0
 		this.value = null
@@ -18,9 +18,7 @@ module.exports = function (assert, Prepare, Proposal) {
 	}
 
 	ProposeState.prototype.nextRound = function (previous) {
-		var id = previous % 100
-		var counter = (previous - id) + 100 //here's the increment
-		this.round = counter + this.proposerId
+		this.round = previous + 1
 		this.promises = []
 		return this.round
 	}
@@ -28,13 +26,14 @@ module.exports = function (assert, Prepare, Proposal) {
 	ProposeState.prototype.prepare = function (previousRound) {
 		this.nextRound(previousRound || this.round)
 		this.action = 'prepare'
-		return new Prepare(this.instance, this.round)
+		return new Prepare(this.instance, this.proposer, this.round)
 	}
 
 	ProposeState.prototype.proposal = function () {
 		this.action = this.value ? 'accept' : 'propose'
 		return new Proposal(
 			this.instance,
+			this.proposer,
 			this.round,
 			this.value
 		)

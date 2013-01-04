@@ -2,6 +2,7 @@ module.exports = function (Proposal) {
 
 	function AcceptState(instance, acceptor) {
 		this.instance = instance
+		this.proposer = 0
 		this.round = 0
 		this.value = null
 		this.valueRound = 0
@@ -9,14 +10,27 @@ module.exports = function (Proposal) {
 	}
 
 	AcceptState.prototype.prepare = function (prepare) {
-		this.round = Math.max(prepare.round, this.round)
+		if (this.proposer === prepare.proposer) {
+			this.round = Math.max(prepare.round, this.round)
+		}
+		else if (prepare.round > this.round) {
+			this.proposer = prepare.proposer
+			this.round = prepare.round
+		}
 		return this.proposal()
 	}
 
 	AcceptState.prototype.accept = function (proposal) {
-		if (this.round > proposal.round) {
+		if (proposal.round < this.round) {
 			return
 		}
+		else if (
+			proposal.proposer !== this.proposer
+			&& proposal.round === this.round
+		) {
+			return
+		}
+		this.proposer = proposal.proposer
 		this.round = proposal.round
 		this.valueRound = proposal.round
 		this.value = proposal.value
@@ -26,6 +40,7 @@ module.exports = function (Proposal) {
 	AcceptState.prototype.proposal = function () {
 		return new Proposal(
 			this.instance,
+			this.proposer,
 			this.round,
 			this.value,
 			this.valueRound,

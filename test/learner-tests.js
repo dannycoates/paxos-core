@@ -7,7 +7,7 @@ function makeFacts(count, start) {
 	var facts = []
 	var start = start || 1
 	for (var i = start; i < start + count; i++) {
-		facts.push(new Proposal(i, 999))
+		facts.push(new Proposal(i, 9, 999))
 	}
 	return facts
 }

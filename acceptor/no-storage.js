@@ -9,7 +9,7 @@ module.exports = function (inherits, EventEmitter) {
 		this.emit(event || 'stored', proposal)
 	}
 
-	NoStorage.prototype.get = function (instanceId, event) {
+	NoStorage.prototype.get = function (instance, event) {
 		// noop
 	}
 

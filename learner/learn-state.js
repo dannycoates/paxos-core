@@ -1,22 +1,33 @@
 module.exports = function () {
 
 	function LearnState(majority) {
+		this.proposer = 0
 		this.proposals = []
 		this.majority = majority
-		this.newestRound = 0
+		this.round = 0
 	}
 
 	function sameRoundDifferentAcceptor(proposal) {
 		return function (other) {
 			return proposal.acceptor !== other.acceptor
+				&& proposal.proposer === other.proposer
 				&& proposal.round === other.round
 		}
 	}
 
 	LearnState.prototype.accepted = function (proposal) {
-		if (proposal.round < this.newestRound) { return }
+		if (proposal.round < this.round) {
+			return
+		}
+		else if (
+			proposal.proposer !== this.proposer
+			&& proposal.round === this.round
+		) {
+			return
+		}
 
-		this.newestRound = proposal.round
+		this.proposer = proposal.proposer
+		this.round = proposal.round
 		this.proposals = this.proposals.filter(sameRoundDifferentAcceptor(proposal))
 		this.proposals.push(proposal)
 
