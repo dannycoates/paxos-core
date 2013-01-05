@@ -1,5 +1,4 @@
 var assert = require('assert')
-var Prepare = require('../lib/prepare')()
 var Proposal = require('../lib/proposal')()
 var Acceptor = require('../acceptor')
 
@@ -16,9 +15,9 @@ describe('Acceptor', function () {
 
 		it('stores the highest round',
 			function () {
-				var prep1 = new Prepare(1, 9, 1)
-				var prep2 = new Prepare(1, 9, 2)
-				var prep3 = new Prepare(1, 9, 3)
+				var prep1 = new Proposal(1, 9, 1)
+				var prep2 = new Proposal(1, 9, 2)
+				var prep3 = new Proposal(1, 9, 3)
 
 				acceptor.prepare(prep2)
 				assert.equal(acceptor.instance(1).round, prep2.round)
@@ -38,7 +37,7 @@ describe('Acceptor', function () {
 					done()
 				})
 
-				acceptor.prepare(new Prepare(4, 9, 5))
+				acceptor.prepare(new Proposal(4, 9, 5))
 			}
 		)
 	})
@@ -84,7 +83,7 @@ describe('Acceptor', function () {
 
 		it('refuses a proposal if a prepare request had a higher round',
 			function (done) {
-				var prep1 = new Prepare(4, 9, 5)
+				var prep1 = new Proposal(4, 9, 5)
 				var proposal1 = new Proposal(4, 9, 3, 'x')
 				acceptor.once('rejected', function (proposal) {
 					assert.equal(proposal.round, prep1.round)

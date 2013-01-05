@@ -34,6 +34,10 @@ module.exports = function (inherits, EventEmitter, Learner, Acceptor, Proposer) 
 	}
 	inherits(Paxos, EventEmitter)
 
+	Paxos.prototype.made = function (proposal) {
+		return proposal.proposer === this.proposer.id
+	}
+
 	Paxos.prototype.submit = function (value) {
 		if (this.prepared.length > 0) {
 			var proposal = prepared.shift()
@@ -46,13 +50,22 @@ module.exports = function (inherits, EventEmitter, Learner, Acceptor, Proposer) 
 	}
 
 	function onAcceptorPromised(proposal) {
-		this.proposer.promised(proposal)
-		this.emit('promised', proposal)
+		if (this.made(proposal)) {
+			this.proposer.promised(proposal)
+		}
+		else {
+			this.emit('promised', proposal)
+		}
 	}
 
 	function onAcceptorRejected(proposal) {
-		this.proposer.rejected(proposal)
-		this.emit('rejected', proposal)
+		if (this.made(proposal)) {
+			this.proposer.rejected(proposal)
+			this.values.unshift(proposal.value)
+		}
+		else {
+			this.emit('rejected', proposal)
+		}
 	}
 
 	function onAcceptorAccepted(proposal) {

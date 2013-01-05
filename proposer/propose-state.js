@@ -1,4 +1,4 @@
-module.exports = function (assert, Prepare, Proposal) {
+module.exports = function (assert, Proposal) {
 
 	function ProposeState(proposer, instance, round) {
 		this.proposer = proposer.id
@@ -26,7 +26,7 @@ module.exports = function (assert, Prepare, Proposal) {
 	ProposeState.prototype.prepare = function (previousRound) {
 		this.nextRound(previousRound || this.round)
 		this.action = 'prepare'
-		return new Prepare(this.instance, this.proposer, this.round)
+		return new Proposal(this.instance, this.proposer, this.round)
 	}
 
 	ProposeState.prototype.proposal = function () {
