@@ -4,22 +4,24 @@ module.exports = function (inherits, Stream, Receiver, StreamState) {
 	function Learner(majority, startingInstance) {
 		Stream.call(this)
 		this.readable = true
-		this.state = new StreamState(startingInstance || 0)
+		this.stream = new StreamState(startingInstance || 0)
 		this.receiver = new Receiver(majority, startingInstance)
 		this.receiver.on('learned', onLearned.bind(this))
 
 		this.onAccepted = this.accepted.bind(this)
+		this.onLearn = this.learn.bind(this)
 	}
 	inherits(Learner, Stream)
 
-	function onLearned(fact) {
-		this.emit('learned', fact)
-		var facts = this.state.add(fact)
+	function onLearned(proposal) {
+		proposal.learned = true
+		this.emit('learned', proposal)
+		var facts = this.stream.add(proposal)
 		var highestInstance;
 		for (var i = 0; i < facts.length; i++) {
-			var fact = facts[i]
-			highestInstance = fact.instance
-			this.emit('data', fact)
+			var proposal = facts[i]
+			highestInstance = proposal.instance
+			this.emit('data', proposal)
 		}
 		this.receiver.highmark(highestInstance)
 	}
@@ -32,6 +34,10 @@ module.exports = function (inherits, Stream, Receiver, StreamState) {
 
 	Learner.prototype.highmark = function () {
 		return this.receiver.highmark()
+	}
+
+	Learner.prototype.learn = function (proposal) {
+		this.receiver.learn(proposal)
 	}
 
 	return Learner

@@ -9,15 +9,15 @@ module.exports = function (Proposal) {
 		this.acceptor = acceptor
 	}
 
-	AcceptState.prototype.prepare = function (prepare) {
-		if (this.proposer === prepare.proposer) {
-			this.round = Math.max(prepare.round, this.round)
+	AcceptState.prototype.prepare = function (proposal) {
+		if (this.proposer === proposal.proposer) {
+			this.round = Math.max(proposal.round, this.round)
 		}
-		else if (prepare.round > this.round) {
-			this.proposer = prepare.proposer
-			this.round = prepare.round
+		else if (proposal.round > this.round) {
+			this.proposer = proposal.proposer
+			this.round = proposal.round
 		}
-		return this.proposal()
+		return this.proposal(proposal.requester)
 	}
 
 	AcceptState.prototype.accept = function (proposal) {
@@ -28,17 +28,18 @@ module.exports = function (Proposal) {
 		this.round = proposal.round
 		this.valueRound = proposal.round
 		this.value = proposal.value
-		return this.proposal()
+		return this.proposal(proposal.requester)
 	}
 
-	AcceptState.prototype.proposal = function () {
+	AcceptState.prototype.proposal = function (requester) {
 		return new Proposal(
 			this.instance,
 			this.proposer,
 			this.round,
 			this.value,
 			this.valueRound,
-			this.acceptor
+			this.acceptor,
+			requester
 		)
 	}
 

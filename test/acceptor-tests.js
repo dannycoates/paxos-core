@@ -5,10 +5,9 @@ var Acceptor = require('../acceptor')
 describe('Acceptor', function () {
 
 	var acceptor = null
-	var fakeLearner = {on: function () {}, highmark: function () { return 0 }}
 
 	beforeEach(function () {
-		acceptor = new Acceptor(1, fakeLearner)
+		acceptor = new Acceptor(1)
 	})
 
 	describe('prepare()', function () {
@@ -81,7 +80,7 @@ describe('Acceptor', function () {
 			}
 		)
 
-		it('refuses a proposal if a prepare request had a higher round',
+		it('rejects a proposal if a prepare request had a higher round',
 			function (done) {
 				var prep1 = new Proposal(4, 9, 5)
 				var proposal1 = new Proposal(4, 9, 3, 'x')

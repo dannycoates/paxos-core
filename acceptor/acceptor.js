@@ -1,16 +1,15 @@
 module.exports = function (assert, inherits, EventEmitter, AcceptState, NoStorage) {
 
-	function Acceptor(id, learner, storage) {
+	function Acceptor(id, storage) {
 		EventEmitter.call(this)
 		this.id = id
-		this.learner = learner //TODO learner can probably be move "up" a level
-		this.learner.on('data', onlearnerData.bind(this))
 		this.storage = storage || new NoStorage()
-		this.highmark = this.learner.highmark()
+		this.highmark = 0
 		this.instances = {}
 
 		this.onPrepare = this.prepare.bind(this)
 		this.onAccept = this.accept.bind(this)
+		this.onLearn = this.learn.bind(this)
 
 		this._registerStorageEvents()
 	}
@@ -30,18 +29,18 @@ module.exports = function (assert, inherits, EventEmitter, AcceptState, NoStorag
 		return instance
 	}
 
-	Acceptor.prototype.prepare = function (prepare) {
-		if (prepare.instance <= this.highmark) {
-			return this.lookup(prepare.instance, 'promised')
+	Acceptor.prototype.prepare = function (proposal) {
+		if (proposal.instance <= this.highmark) {
+			return this.lookup(proposal, 'promised')
 		}
 
-		var proposal = this.instance(prepare.instance).prepare(prepare)
+		var proposal = this.instance(proposal.instance).prepare(proposal)
 		this.storage.set(proposal, 'promised')
 	}
 
 	Acceptor.prototype.accept = function (proposal) {
 		if (proposal.instance <= this.highmark) {
-			return this.lookup(proposal.instance, 'rejected')
+			return this.lookup(proposal, 'rejected')
 		}
 
 		var instance = this.instance(proposal.instance)
@@ -52,11 +51,11 @@ module.exports = function (assert, inherits, EventEmitter, AcceptState, NoStorag
 		this.emit('rejected', instance.proposal())
 	}
 
-	Acceptor.prototype.lookup = function (instance, event) {
-		this.storage.get(instance, event || 'lookup')
+	Acceptor.prototype.lookup = function (proposal, event) {
+		this.storage.get(proposal, event || 'lookup')
 	}
 
-	function onlearnerData(proposal) {
+	Acceptor.prototype.learn = function (proposal) {
 		this.highmark = proposal.instance
 		this.storage.set(proposal)
 		delete this.instances[proposal.instance]

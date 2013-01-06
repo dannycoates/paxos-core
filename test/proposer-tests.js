@@ -7,10 +7,9 @@ var Proposer = require('../proposer')
 describe('Proposer', function () {
 
 	var proposer = null
-	var fakeLearner = { on: function () {}}
 
 	beforeEach(function () {
-		proposer = new Proposer(1, 2, fakeLearner)
+		proposer = new Proposer(1, 2)
 	})
 
 	describe('prepare', function () {

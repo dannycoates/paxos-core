@@ -26,7 +26,15 @@ module.exports = function (assert, Proposal) {
 	ProposeState.prototype.prepare = function (previousRound) {
 		this.nextRound(previousRound || this.round)
 		this.action = 'prepare'
-		return new Proposal(this.instance, this.proposer, this.round)
+		return new Proposal(
+			this.instance,
+			this.proposer,
+			this.round,
+			null,
+			0,
+			null,
+			this.proposer
+		)
 	}
 
 	ProposeState.prototype.proposal = function () {
@@ -35,7 +43,10 @@ module.exports = function (assert, Proposal) {
 			this.instance,
 			this.proposer,
 			this.round,
-			this.value
+			this.value,
+			0,
+			null,
+			this.proposer
 		)
 	}
 
@@ -50,7 +61,12 @@ module.exports = function (assert, Proposal) {
 	ProposeState.prototype.promised = function (proposal) {
 		assert.equal(this.instance, proposal.instance)
 
-		if (this.round < proposal.round) {
+		if (proposal.learned) {
+			this.action = 'reject'
+			return proposal
+		}
+
+		if (proposal.supersedes(this.proposer, this.round)) {
 			return this.prepare(proposal.round) // retry with a higher round
 		}
 

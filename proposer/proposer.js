@@ -1,13 +1,11 @@
 module.exports = function (assert, inherits, EventEmitter, ProposeState) {
 
-	function Proposer(id, majority, learner) {
+	function Proposer(id, majority) {
 		EventEmitter.call(this)
 		this.id = id
 		this.majority = majority
-		this.instanceCounter = 1
+		this.instanceCounter = 0
 		this.instances = {}
-		this.learner = learner
-		this.learner.on('learned', onLearned.bind(this))
 
 		this.onPromised = this.promised.bind(this)
 		this.onRejected = this.rejected.bind(this)
@@ -24,12 +22,13 @@ module.exports = function (assert, inherits, EventEmitter, ProposeState) {
 	Proposer.prototype.prepare = function (instance) {
 		this.emit(
 			'prepare',
-			this.instance(instance || this.instanceCounter++).prepare()
+			this.instance(instance || ++this.instanceCounter).prepare()
 		)
 	}
 
 	Proposer.prototype.promised = function (proposal) {
-		var instance = this.instance(proposal.instance, proposal.round)
+		var instance = this.instances[proposal.instance]
+		if (!instance) { return }
 		var prepareOrProposal = instance.promised(proposal)
 		this.emit(instance.action, prepareOrProposal)
 	}
@@ -39,15 +38,18 @@ module.exports = function (assert, inherits, EventEmitter, ProposeState) {
 	}
 
 	Proposer.prototype.rejected = function (proposal) {
-		var instance = this.instances[proposal.instance]
-		if (instance && instance.round < proposal.round) {
+		if(this.learn(proposal)) {
 			this.prepare()
 		}
 	}
 
-	function onLearned(proposal) {
-		delete this.instances[proposal.instance]
-		this.emit('learned', proposal)
+	Proposer.prototype.learn = function (proposal) {
+		this.instanceCounter = Math.max(this.instanceCounter, proposal.instance)
+		var instance = this.instances[proposal.instance]
+		if (instance) {
+			delete this.instances[proposal.instance]
+		}
+		return !!instance
 	}
 
 	return Proposer

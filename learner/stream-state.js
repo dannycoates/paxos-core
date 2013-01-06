@@ -4,8 +4,8 @@ module.exports = function () {
 		this.state = new Streaming(startingInstance || 0)
 	}
 
-	StreamState.prototype.add = function (fact) {
-		var facts = this.state.add(fact)
+	StreamState.prototype.add = function (proposal) {
+		var facts = this.state.add(proposal)
 		this.state = this.state.next
 		return facts
 	}
@@ -17,16 +17,16 @@ module.exports = function () {
 
 	var empty = []
 
-	Streaming.prototype.add = function (fact) {
-		if (this.previousInstance >= fact.instance) {
+	Streaming.prototype.add = function (proposal) {
+		if (this.previousInstance >= proposal.instance) {
 			// ignore repeat facts
 			return empty
 		}
-		if (this.previousInstance + 1 === fact.instance) {
-			this.previousInstance = fact.instance
-			return [fact]
+		if (this.previousInstance + 1 === proposal.instance) {
+			this.previousInstance = proposal.instance
+			return [proposal]
 		}
-		this.next = new Buffering(this.previousInstance, fact)
+		this.next = new Buffering(this.previousInstance, proposal)
 		return empty
 	}
 
@@ -42,26 +42,26 @@ module.exports = function () {
 		return a.instance - b.instance
 	}
 
-	function sameInstance(fact) {
-		return function (other) { return other.instance === fact.instance }
+	function sameInstance(proposal) {
+		return function (other) { return other.instance === proposal.instance }
 	}
 
-	Buffering.prototype.add = function (fact) {
+	Buffering.prototype.add = function (proposal) {
 		if (
-				fact.instance <= this.previousInstance
-				|| fact.instance === this.newestFact.instance
-				|| this.gap.some(sameInstance(fact))
+				proposal.instance <= this.previousInstance
+				|| proposal.instance === this.newestFact.instance
+				|| this.gap.some(sameInstance(proposal))
 		) {
 			// ignore repeat facts
 			return empty
 		}
-		else if (fact.instance < this.newestFact.instance) {
-			this.gap.push(fact)
+		else if (proposal.instance < this.newestFact.instance) {
+			this.gap.push(proposal)
 		}
 		else {
-			this.gapLength = fact.instance - (this.previousInstance + 1)
+			this.gapLength = proposal.instance - (this.previousInstance + 1)
 			this.gap.push(this.newestFact)
-			this.newestFact = fact
+			this.newestFact = proposal
 		}
 
 		if(this.gap.length === this.gapLength) {

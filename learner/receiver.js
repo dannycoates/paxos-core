@@ -24,6 +24,10 @@ module.exports = function (inherits, EventEmitter, LearnState) {
 		}
 	}
 
+	Receiver.prototype.learn = function (proposal) {
+		this.emit('learned', proposal)
+	}
+
 	Receiver.prototype.highmark = function (instance) {
 		this._highmark = instance || this._highmark
 		return this._highmark
