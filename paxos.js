@@ -57,8 +57,10 @@ module.exports = function (logger, inherits, EventEmitter, Learner, Acceptor, Pr
 	function onAcceptorRejected(proposal) {
 		logger.info('id %s REJECTED\t%s', this.proposer.id, proposal)
 		if (this.made(proposal)) {
-			this.proposer.rejected(proposal)
-			this.values.unshift(proposal.value)
+			var value = this.proposer.rejected(proposal)
+			if (value) {
+				this.values.unshift(value)
+			}
 		}
 		else {
 			this.emit('rejected', proposal)

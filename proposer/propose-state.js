@@ -5,16 +5,10 @@ module.exports = function (assert, Proposal) {
 		this.instance = instance
 		this.round = round || 0
 		this.value = null
-
-		// TODO: decide where timeouts go. At this point there's arguments for
-		// here, where they become part of the state, or in the communication
-		// layer which keeps the state "time free". I think I'd prefer to keep
-		// knowledge of time out of the state, but it seems easier to implement
-		// here. So lets try to do it "there" and only come back if its too ugly.
-
 		this.promises = []
 		this.action = 'none'
 		this.majority = proposer.majority
+		this.surrogate = false // true if value was set by the an acceptor
 	}
 
 	ProposeState.prototype.nextRound = function (previous) {
@@ -77,6 +71,7 @@ module.exports = function (assert, Proposal) {
 			var highest = this.promises.reduce(highestValueRound)
 			if (highest.valueRound) {
 				this.value = highest.value
+				this.surrogate = true
 				// otherwise there were no accepted proposals
 			}
 			return this.proposal()

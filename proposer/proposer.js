@@ -38,18 +38,22 @@ module.exports = function (assert, inherits, EventEmitter, ProposeState) {
 	}
 
 	Proposer.prototype.rejected = function (proposal) {
-		if(this.learn(proposal)) {
-			this.prepare()
+		var instance = this.learn(proposal)
+		if (instance) {
+			if (!proposal.learned) {
+				this.prepare()
+			}
+			if (!instance.surrogate) {
+				return instance.value
+			}
 		}
 	}
 
 	Proposer.prototype.learn = function (proposal) {
 		this.instanceCounter = Math.max(this.instanceCounter, proposal.instance)
 		var instance = this.instances[proposal.instance]
-		if (instance) {
-			delete this.instances[proposal.instance]
-		}
-		return !!instance
+		delete this.instances[proposal.instance]
+		return instance
 	}
 
 	return Proposer

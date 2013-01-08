@@ -1,4 +1,4 @@
-var logger = console
+var logger = { info: function () {}}
 
 var inherits = require('util').inherits
 var EventEmitter = require('events').EventEmitter
